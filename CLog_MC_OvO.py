@@ -4,7 +4,7 @@ from utils import plot_decision_boundary
 import numpy as np
 
 class CLog_OVO():
-    def __init__(self, n_iter=1000, batch_size=None, kernel=1, step=0.01, mode='primal'):
+    def __init__(self, n_iter=1000, batch_size=None, kernel=1, step=0.01, mode='primal', iterative=False):
         """
         Initialize the CLog_OVO classifier.
         Parameters:
@@ -18,14 +18,17 @@ class CLog_OVO():
                 Learning rate for the optimization algorithm.
             mode : str, optional (default='primal')
                 Mode of the classifier. 'primal' for primal form, 'dual' for dual form.
+            iterative : bool, optional (default=False)
+                If True, uses an iterative approach for gradient descent. Sets batch_size to 1.
         """
         self.n_iter = n_iter
         self.models = []
         self.classes_ = None
-        self.batch_size = batch_size
+        self.batch_size = batch_size if not iterative else 1
         self.kernel = kernel if mode == 'dual' else 1
         self.step = step
         self.mode = mode
+        self.iterative = iterative
     
     def fit(self, X, y):
         """
@@ -47,9 +50,9 @@ class CLog_OVO():
                     mask = (y == class_i) | (y == class_j)
 
                     if self.mode == 'primal':
-                        model = CLog_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, learning_rate=self.step)
+                        model = CLog_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, learning_rate=self.step, iterative=self.iterative)
                     else:
-                        model = CLogDKPd_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, kernel=self.kernel, learning_rate=self.step)
+                        model = CLogDKPd_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, kernel=self.kernel, learning_rate=self.step, iterative=self.iterative)
 
                     # fit the model on the binary data
                     X_bin = X[mask]
@@ -129,7 +132,7 @@ if __name__ == "__main__":
     X_test = (X_test - train_mean) / train_std
 
     # Create an instance of the CLog_OVO classifier
-    clf = CLog_OVO(n_iter=5000, batch_size=128, kernel=3, step=0.001, mode='dual')
+    clf = CLog_OVO(n_iter=5000, batch_size=1, kernel=1, step=0.001, mode='dual', iterative=True)
     
     # Fit the model on the training data
     clf.fit(X_train, y_train)

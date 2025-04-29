@@ -15,12 +15,16 @@ class CLog_MGmB:
             batch_size : int
                 Size of the mini-batch for gradient descent.
                 If None, uses the entire dataset for each iteration.
+            tolerance : float
+                Tolerance for convergence. If the norm of the gradient is less than this value, the algorithm stops.
+            iterative : bool
+                If True, uses an iterative approach for gradient descent. Sets batch_size to 1.
             verbose : bool
                 If True, prints the progress of the training.
         """
         self.learning_rate = learning_rate
         self.max_iter = n_iter
-        self.batch_size = batch_size
+        self.batch_size = batch_size if not iterative else 1
         self.verbose = verbose
         self.weights = None
         self.X_train = None  # armazenar X com bias
@@ -44,7 +48,7 @@ class CLog_MGmB:
         self.errors = []
 
         for t in range(self.max_iter):
-            if self.iterative and self.batch_size == 1:
+            if self.iterative:
                 # Iterative approach
                 erros = [] # armazena os erros de cada iteração
                 for i in range(N):

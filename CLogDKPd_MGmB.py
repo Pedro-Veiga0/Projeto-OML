@@ -19,13 +19,15 @@ class CLogDKPd_MGmB:
                 If None, uses the entire dataset for each iteration.
             tolerance : float
                 Tolerance for convergence. If the norm of the gradient is less than this value, the algorithm stops.
+            iterative : bool
+                If True, uses an iterative approach for gradient descent. Sets batch_size to 1.
             verbose : bool
                 If True, prints the progress of the training.
         """
         self.kernel = kernel
         self.learning_rate = learning_rate
         self.max_iter = n_iter
-        self.batch_size = batch_size
+        self.batch_size = batch_size if not iterative else 1
         self.verbose = verbose
         self.alpha = None
         self.X_train = None  # armazenar X com bias
@@ -105,11 +107,11 @@ class CLogDKPd_MGmB:
 if __name__ == "__main__":
     # Dados XOR
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([0, 1, 1, 1])
+    y = np.array([0, 1, 1, 0])
     
     # Parâmetros do classificador
     kernel = 2
-    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=1, verbose=True, iterative=True)
+    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=1, verbose=True, iterative=False)
     
     # Treinamento
     model.fit(X, y)
