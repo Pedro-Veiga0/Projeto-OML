@@ -51,7 +51,10 @@ class CLog_MGmB:
             if self.iterative:
                 # Iterative approach
                 erros = [] # armazena os erros de cada iteração
-                for i in range(N):
+                
+                indices = np.arange(N)
+                np.random.shuffle(indices)  # Embaralha os índices
+                for i in indices:
                     x_i = self.X_train[i]
                     y_i = y[i]
 

@@ -54,7 +54,9 @@ class CLogDKPd_MGmB:
             if self.iterative and self.batch_size == 1:
                 # Iterative approach
                 erros = []
-                for i in range(N):
+                indices = np.arange(N)
+                np.random.shuffle(indices)  # Embaralha os índices
+                for i in indices:
                     x_i = K[i]
                     y_i = y[i]
 
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     
     # Parâmetros do classificador
     kernel = 2
-    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=1, verbose=True, iterative=False)
+    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=1, verbose=True, iterative=True)
     
     # Treinamento
     model.fit(X, y)
