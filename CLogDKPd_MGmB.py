@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class CLogDKPd_MGmB:
-    def __init__(self, kernel=1, learning_rate=0.5, n_iter=2000, batch_size=None, tolerance=1e-6,verbose=False):
+    def __init__(self, kernel=1, learning_rate=0.5, n_iter=2000, batch_size=None, tolerance=1e-6, iterative=False,verbose=False):
         """
         Logistic Classifier with Kernelized Polynomial Decision Boundary using Mini-Batch Gradient Descent.
         Parameters:
@@ -31,6 +31,7 @@ class CLogDKPd_MGmB:
         self.X_train = None  # armazenar X com bias
         self.errors = []
         self.tolerance = tolerance
+        self.iterative = iterative
 
     @staticmethod
     def sigmoid(x):
@@ -46,26 +47,45 @@ class CLogDKPd_MGmB:
 
         # Matriz de Gram com kernel polinomial
         K = (self.X_train @ self.X_train.T) ** self.kernel
+
         for t in range(self.max_iter):
-            batch_indices = np.random.choice(N, self.batch_size, replace=False)
-            K_batch = K[batch_indices]
-            y_batch = y[batch_indices]
+            if self.iterative and self.batch_size == 1:
+                # Iterative approach
+                erros = []
+                for i in range(N):
+                    x_i = K[i]
+                    y_i = y[i]
 
-            y_pred = self.sigmoid(K_batch @ self.alpha)  # (batch_size,)
-            error = y_pred - y_batch # (batch_size,)
-            self.errors.append(np.mean(np.abs(error)))
+                    y_pred = self.sigmoid(x_i @ self.alpha)
+                    error = y_pred - y_i
+                    erros.append(np.abs(error))
+                    
 
-            # basicaly each error is multiplied by the corresponding row in K_batch and summ along axis = 0, but we can do it in a vectorized way
-            # numpy broadcasting will take care of the multiplication
-            grad = (error @ K_batch) / self.batch_size # (batch_size, N)
+                    grad = (error * x_i)
+                    self.alpha -= self.learning_rate * grad
+                self.errors.append(np.mean(erros))  # erro médio da iteração t
+            else:
+                batch_indices = np.random.choice(N, self.batch_size, replace=False)
+                K_batch = K[batch_indices]
+                y_batch = y[batch_indices]
+
+                y_pred = self.sigmoid(K_batch @ self.alpha)  # (batch_size,)
+                error = y_pred - y_batch # (batch_size,)
+                self.errors.append(np.mean(np.abs(error)))
+
+                # basicaly each error is multiplied by the corresponding row in K_batch and summ along axis = 0, but we can do it in a vectorized way
+                # numpy broadcasting will take care of the multiplication
+                grad = (error @ K_batch) / self.batch_size # (batch_size, N)
+                self.alpha -= self.learning_rate * grad
 
             if self.verbose:
                 print(f"Iteration {t}, Norm of grad: {np.linalg.norm(grad)}")
-            if np.linalg.norm(grad) < self.tolerance:
+
+            # Previne convergência prematura do algoritmo
+            if self.batch_size !=1 and np.linalg.norm(grad) < self.tolerance:
                 if self.verbose:
                     print(f"Converged at iteration {t}")
                 break
-            self.alpha -= self.learning_rate * grad
 
         return self
 
@@ -85,11 +105,11 @@ class CLogDKPd_MGmB:
 if __name__ == "__main__":
     # Dados XOR
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([0, 1, 1, 0])
+    y = np.array([0, 1, 1, 1])
     
     # Parâmetros do classificador
     kernel = 2
-    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=4, verbose=True)
+    model = CLogDKPd_MGmB(kernel=kernel, learning_rate=0.5, n_iter=2000, batch_size=1, verbose=True, iterative=True)
     
     # Treinamento
     model.fit(X, y)

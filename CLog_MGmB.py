@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class CLog_MGmB:
-    def __init__(self, learning_rate=0.5, n_iter=2000, batch_size=None, verbose=False):
+    def __init__(self, learning_rate=0.5, n_iter=2000, batch_size=None, tolerance=1e-6, iterative=False, verbose=False):
         """
         Logistic Classifier using Mini-Batch Gradient Descent.
         Parameters:
@@ -26,6 +26,8 @@ class CLog_MGmB:
         self.X_train = None  # armazenar X com bias
         self.errors = []
         self.kernel = 1  # grau do polinômio
+        self.tolerance = tolerance
+        self.iterative = iterative
 
     @staticmethod
     def sigmoid(x):
@@ -42,24 +44,42 @@ class CLog_MGmB:
         self.errors = []
 
         for t in range(self.max_iter):
-            batch_indices = np.random.choice(N, self.batch_size, replace=False)
-            x_batch = self.X_train[batch_indices]
-            y_batch = y[batch_indices]
+            if self.iterative and self.batch_size == 1:
+                # Iterative approach
+                erros = [] # armazena os erros de cada iteração
+                for i in range(N):
+                    x_i = self.X_train[i]
+                    y_i = y[i]
 
-            y_pred = self.sigmoid(x_batch @ self.weights)  # (batch_size,)
-            error = y_pred - y_batch
-            self.errors.append(np.mean(np.abs(error)))
+                    y_pred = self.sigmoid(x_i @ self.weights)  # (1,)
+                    error = y_pred - y_i
+                    erros.append(np.abs(error))
 
-            # basicaly each error is multiplied by the corresponding x_tilde and summ along axis = 0, but we can do it in a vectorized way
-            grad = (error @ x_batch) / self.batch_size
+                    grad = error * x_i
+                    self.weights -= self.learning_rate * grad
+
+                self.errors.append(np.mean(erros)) # erro médio da iteração t
+            else:
+                batch_indices = np.random.choice(N, self.batch_size, replace=False)
+                x_batch = self.X_train[batch_indices]
+                y_batch = y[batch_indices]
+
+                y_pred = self.sigmoid(x_batch @ self.weights)  # (batch_size,)
+                error = y_pred - y_batch
+                self.errors.append(np.mean(np.abs(error)))
+
+                # basicaly each error is multiplied by the corresponding x_tilde and summ along axis = 0, but we can do it in a vectorized way
+                grad = (error @ x_batch) / self.batch_size
+                self.weights -= self.learning_rate * grad
 
             if self.verbose:
                 print(f"Iteration {t}, Norm of grad: {np.linalg.norm(grad)}")
-            if np.linalg.norm(grad) < 1e-6:
+            
+            # Previne convergência prematura do algoritmo
+            if self.batch_size != 1 and np.linalg.norm(grad) < self.tolerance:
                 if self.verbose:
                     print(f"Converged at iteration {t}")
                 break
-            self.weights -= self.learning_rate * grad
 
         return self
 
@@ -78,9 +98,9 @@ class CLog_MGmB:
 if __name__ == "__main__":
     # Dados XOR
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([0, 1, 1, 0])
+    y = np.array([0, 1, 1, 1])
     
-    model = CLog_MGmB( learning_rate=0.5, n_iter=2000, batch_size=4, verbose=True)
+    model = CLog_MGmB( learning_rate=0.5, n_iter=2000, batch_size=4, verbose=True, iterative=True)
     
     # Treinamento
     model.fit(X, y)
