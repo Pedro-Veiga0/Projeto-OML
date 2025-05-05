@@ -51,7 +51,7 @@ class CLog_MGmB:
             if self.iterative:
                 # Iterative approach
                 erros = [] # armazena os erros de cada iteração
-                
+                grads = []
                 indices = np.arange(N)
                 np.random.shuffle(indices)  # Embaralha os índices
                 for i in indices:
@@ -63,9 +63,11 @@ class CLog_MGmB:
                     erros.append(np.abs(error))
 
                     grad = error * x_i
+                    grads.append(grad)
                     self.weights -= self.learning_rate * grad
 
                 self.errors.append(np.mean(erros)) # erro médio da iteração t
+                grad = np.mean(grads, axis=0)  # gradiente médio da iteração t
             else:
                 batch_indices = np.random.choice(N, self.batch_size, replace=False)
                 x_batch = self.X_train[batch_indices]

@@ -56,6 +56,7 @@ class CLogDKPd_MGmB:
                 erros = []
                 indices = np.arange(N)
                 np.random.shuffle(indices)  # Embaralha os índices
+                grads = []
                 for i in indices:
                     x_i = K[i]
                     y_i = y[i]
@@ -66,8 +67,10 @@ class CLogDKPd_MGmB:
                     
 
                     grad = (error * x_i)
+                    grads.append(grad)
                     self.alpha -= self.learning_rate * grad
                 self.errors.append(np.mean(erros))  # erro médio da iteração t
+                grad = np.mean(grads, axis=0)  # média dos gradientes
             else:
                 batch_indices = np.random.choice(N, self.batch_size, replace=False)
                 K_batch = K[batch_indices]
