@@ -1,4 +1,3 @@
-# TODO: fazer um critério de desempate caso haja mais de um output code próximo, atualmente usa a classe de índice menor
 # TODO: pode-se pensar em retornar o count de classes mais próximas para cada evento, para ajudar a entender os erros durante análise da matriz de confusão.
 # TODO: fazer busca de tabelas de output codes com média maior de distância de Hamming entre pares para tentar melhorar accuracy (código buscaTabelaEcoc.py) 
 
@@ -50,26 +49,7 @@ class CLog_Ecoc():
         self.classes_ = sorted(set(y))
         qclasses = len(self.classes_)
         self.classesCanonicas = ( self.classes_ == sorted(set(range(qclasses))) )
-        if qclasses == 2:
-            self.codes = np.array([
-                [1,1,1,1,1],
-                [0,0,0,1,1],
-                [1,1,0,0,0]
-            ])
-        elif qclasses == 3:
-            self.codes = np.array([
-                [1,1,1,1,1],
-                [0,0,0,1,1],
-                [1,1,0,0,0]
-            ])
-        elif qclasses == 4:
-            self.codes = np.array([
-                [1,1,1,1,1,1,1,1],
-                [0,0,0,0,0,1,1,1],
-                [1,1,1,0,0,0,0,0],
-                [0,0,0,1,1,1,0,0]
-            ])
-        elif qclasses > 4 and qclasses <= 7: #sugestão de code design no artigo pdf "Error-Correcting Output Codes"
+        if qclasses >= 2 and qclasses <= 7: #sugestão de code design no artigo pdf "Error-Correcting Output Codes"
             qbits = (2**(qclasses-1)) - 1
             self.codes = [np.ones(qbits)]
             for i in range(1, qclasses):
@@ -81,7 +61,6 @@ class CLog_Ecoc():
             self.codes = np.array(self.codes).astype(int)
         else:
             raise ValueError(f"Quantidade de classes {len(self.classes_)} inaceitável para Ecoc, deve ser entre 2 e 7.")
-
 
         if self.classesCanonicas:
             y_ind = y
@@ -136,8 +115,17 @@ class CLog_Ecoc():
         distances = cdist(code, self.codes, metric='hamming') * self.codes.shape[1]
         min_value = distances.min(axis=1, keepdims=True)
 
-        #count = np.sum(distances == min_value, axis=1)
         closerClasses = distances.argmin(axis=1)
+        count = np.sum(distances == min_value, axis=1)
+        if count.max() > 1: #Houve pelo menos um empate, então escolho uma classe aleatoriamente para cada empate
+            for i, qclasses in enumerate(count):
+                if qclasses > 1: # empate
+                    indices = np.where(distances[i] == min_value[i])[0]
+                    #escolhido = np.random.choice(indices) #não gostei do resultado porque impacta no resultado de accuracy significativamente de forma aleatória
+                    escolhido = indices[i % len(indices)]
+                    #print("Houve um empate!", i, code[i], distances[i], min_value[i], indices, escolhido)
+                    closerClasses[i] = escolhido
+        
         if not self.classesCanonicas: # Map indices to class labels
             closerClasses = np.array(self.classes_)[closerClasses]
         return closerClasses
@@ -172,8 +160,9 @@ if __name__ == "__main__":
     #                         random_state=12)
     #X, y = make_classification(n_samples=1000, n_features=784, n_classes=3, n_informative=500, random_state=42)
     #X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
-    X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
+    #X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
     #X, y = make_moons(n_samples=1000, noise=0.2, random_state=42)
+    X, y = make_classification(n_samples=200, n_features=2, n_classes=4, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
     
     # y[y == 2] = 3 #descomente para testar classe não canônicas
 
