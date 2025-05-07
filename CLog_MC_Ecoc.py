@@ -110,21 +110,34 @@ class CLog_Ecoc():
         for model in self.models:
             code.append(model.predict_proba(X))
 
-        code = np.round(np.array(code)).astype(int).T
+        #code = np.round(np.array(code)).astype(int).T
+        code = np.array(code).T
+        icode = np.round(code).astype(int)
         # Return the class with the most the output code closer by Hamming distance
-        distances = cdist(code, self.codes, metric='hamming') * self.codes.shape[1]
+        distances = cdist(icode, self.codes, metric='hamming') * self.codes.shape[1]
         min_value = distances.min(axis=1, keepdims=True)
 
+        escolhido = distances.argmin(axis=1)
         closerClasses = distances.argmin(axis=1)
         count = np.sum(distances == min_value, axis=1)
-        if count.max() > 1: #Houve pelo menos um empate, então escolho uma classe aleatoriamente para cada empate
-            for i, qclasses in enumerate(count):
-                if qclasses > 1: # empate
-                    indices = np.where(distances[i] == min_value[i])[0]
-                    #escolhido = np.random.choice(indices) #não gostei do resultado porque impacta no resultado de accuracy significativamente de forma aleatória
-                    escolhido = indices[i % len(indices)]
-                    #print("Houve um empate!", i, code[i], distances[i], min_value[i], indices, escolhido)
-                    closerClasses[i] = escolhido
+        if count.max() > 1: #Houve pelo menos um empate
+            for i, qclasses in enumerate(count): # analisa cada evento em que pode ter havido empate de mais de uma classe y^
+                if qclasses <= 1: # não houve empate
+                    continue
+                #houve empate, então escolho a classe empatada com a menor distância sum(abs(p^ - code)), ao invés de usar a métrica hamming com y^
+                indices = np.where(distances[i] == min_value[i])[0]
+                fdistances = np.sum(np.abs(self.codes[indices] - code[i]), axis=1)
+                escolhido = fdistances.argmin()
+                ncount = np.sum(fdistances == fdistances[escolhido])
+                if ncount > 1: # se mesmo usando p^ para calcular a distância mínima ainda há empate, então escolhe aleatoriamente uma das classes empatadas
+                    indices = np.where(fdistances == fdistances[escolhido])[0]
+                    escolhido = indices[i % len(indices)] #aleatorio de acordo com a posição do evento! Mais agradável por formar hachurado na meshgrid!
+                    #escolhido = np.random.choice(indices) 
+                else:
+                    escolhido = indices[escolhido]
+                    #print("Houve um empate!", i, ncount, code[i], distances[i], min_value[i], np.abs((self.codes[indices]) - code[i]), indices, fdistances, escolhido)
+
+                closerClasses[i] = escolhido
         
         if not self.classesCanonicas: # Map indices to class labels
             closerClasses = np.array(self.classes_)[closerClasses]
@@ -159,10 +172,10 @@ if __name__ == "__main__":
     #                         n_classes=4,
     #                         random_state=12)
     #X, y = make_classification(n_samples=1000, n_features=784, n_classes=3, n_informative=500, random_state=42)
-    #X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
+    X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
     #X, y = make_classification(n_samples=1000, n_features=2, n_classes=3, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
     #X, y = make_moons(n_samples=1000, noise=0.2, random_state=42)
-    X, y = make_classification(n_samples=200, n_features=2, n_classes=4, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
+    #X, y = make_classification(n_samples=200, n_features=2, n_classes=4, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=42)
     
     # y[y == 2] = 3 #descomente para testar classe não canônicas
 
