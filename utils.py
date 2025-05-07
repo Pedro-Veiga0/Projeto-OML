@@ -32,7 +32,12 @@ def plot_decision_boundary(model, X, y, resolution=100, figsize=(8, 6)):
         )
     plt.xlim(xx1.min(), xx1.max())
     plt.ylim(xx2.min(), xx2.max())
-    plt.title(f"Decision Bound (Kernel Polinomial degree {model.kernel})")
+
+    if hasattr(model, 'kernel'):
+        plt.title(f"Decision Bound (Kernel Polinomial degree: {model.kernel})")
+    else:
+        plt.title("Decision Boundary")
+    # plt.title(f"Decision Bound (Kernel Polinomial degree {model.kernel})")
     plt.xlabel("Feature 1")
     plt.ylabel("Feature 2")
     plt.legend()
