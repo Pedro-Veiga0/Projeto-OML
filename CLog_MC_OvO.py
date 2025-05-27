@@ -2,6 +2,7 @@ from CLogDKPd_MGmB import CLogDKPd_MGmB
 from CLog_MGmB import CLog_MGmB
 from utils import plot_decision_boundary
 import numpy as np
+from tqdm import tqdm
 
 class CLog_OVO():
     def __init__(self, n_iter=1000, batch_size=None, kernel=1, step=0.01, mode='primal', iterative=False):
@@ -43,25 +44,44 @@ class CLog_OVO():
         self.classes_ = set(y)
         # create a list of models for each pair of classes
         self.models = []
-        for i, class_i in enumerate(self.classes_):
-            for j, class_j in enumerate(self.classes_):
-                if i < j:
-                    # create a binary classifier for the pair of classes
-                    mask = (y == class_i) | (y == class_j)
+        total_pairs = len(self.classes_) * (len(self.classes_) - 1) // 2
 
-                    if self.mode == 'primal':
-                        model = CLog_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, learning_rate=self.step, iterative=self.iterative)
-                    else:
-                        model = CLogDKPd_MGmB(n_iter=self.n_iter, batch_size=self.batch_size, kernel=self.kernel, learning_rate=self.step, iterative=self.iterative)
+        # Usar tqdm para acompanhar o progresso
+        with tqdm(total=total_pairs, desc="Training binary classifiers") as pbar:
+            for i, class_i in enumerate(self.classes_):
+                for j, class_j in enumerate(self.classes_):
+                    if i < j:
+                        # Cria um classificador binário para o par de classes
+                        mask = (y == class_i) | (y == class_j)
 
-                    # fit the model on the binary data
-                    X_bin = X[mask]
-                    y_binary = y[mask]
-                    # convert the labels to 0 and 1 - class_i = 1, class_j = 0
-                    y_binary = (y_binary == class_i).astype(int)
-                    # fit the model
-                    model.fit(X_bin, y_binary)
-                    self.models.append((model, class_i, class_j))
+                        if self.mode == 'primal':
+                            model = CLog_MGmB(
+                                n_iter=self.n_iter,
+                                batch_size=self.batch_size,
+                                learning_rate=self.step,
+                                iterative=self.iterative
+                            )
+                        else:
+                            model = CLogDKPd_MGmB(
+                                n_iter=self.n_iter,
+                                batch_size=self.batch_size,
+                                kernel=self.kernel,
+                                learning_rate=self.step,
+                                iterative=self.iterative
+                            )
+
+                        # Dados binários
+                        X_bin = X[mask]
+                        y_binary = y[mask]
+                        y_binary = (y_binary == class_i).astype(int)
+
+                        # Treina o modelo
+                        model.fit(X_bin, y_binary)
+                        self.models.append((model, class_i, class_j))
+
+                        # Atualiza a barra de progresso
+                        pbar.set_postfix({'Par': f'{class_i} vs {class_j}'})
+                        pbar.update(1)
         return self
     
     def predict(self, X):
@@ -132,7 +152,7 @@ if __name__ == "__main__":
     X_test = (X_test - train_mean) / train_std
 
     # Create an instance of the CLog_OVO classifier
-    clf = CLog_OVO(n_iter=5000, batch_size=1, kernel=1, step=0.001, mode='dual', iterative=True)
+    clf = CLog_OVO(n_iter=5000, batch_size=1, kernel=3, step=0.001, mode='dual', iterative=False)
     
     # Fit the model on the training data
     clf.fit(X_train, y_train)
