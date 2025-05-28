@@ -35,7 +35,23 @@ class CLog_Ecoc():
         self.step = step
         self.mode = mode
         self.iterative = iterative
-    
+
+    def generateEcocTable(self, qclasses, dropCols = None):
+        if qclasses >= 2 and qclasses <= 7: #sugestão de code design no artigo pdf "Error-Correcting Output Codes"
+            qbits = (2**(qclasses-1)) - 1
+            codes = [np.ones(qbits)]
+            for i in range(1, qclasses):
+                code = np.zeros(qbits)
+                tbits = int((qbits + 1) / (2**i))
+                for j in range(tbits, qbits, tbits*2):
+                    code[j:j+tbits] = 1
+                codes.append(code)
+            if dropCols is not None:
+                codes = np.delete(codes, dropCols, axis=1)
+            return np.array(codes).astype(int)
+        else:
+            raise ValueError(f"Quantidade de classes {len(self.classes_)} inaceitável para Ecoc, deve ser entre 2 e 7.")
+        
     def fit(self, X, y, ECOCTable = None):
         """
         Error-Correcting Output Codes (Ecoc) classification using CLogDKPd_MGmB or CLog_MGmB.
@@ -51,19 +67,8 @@ class CLog_Ecoc():
         self.classesCanonicas = ( self.classes_ == sorted(set(range(qclasses))) )
         if ECOCTable is not None:
             self.codes = np.array(ECOCTable) 
-        else: 
-            if qclasses >= 2 and qclasses <= 7: #sugestão de code design no artigo pdf "Error-Correcting Output Codes"
-                qbits = (2**(qclasses-1)) - 1
-                self.codes = [np.ones(qbits)]
-                for i in range(1, qclasses):
-                    code = np.zeros(qbits)
-                    tbits = int((qbits + 1) / (2**i))
-                    for j in range(tbits, qbits, tbits*2):
-                        code[j:j+tbits] = 1
-                    self.codes.append(code)
-                self.codes = np.array(self.codes).astype(int)
-            else:
-                raise ValueError(f"Quantidade de classes {len(self.classes_)} inaceitável para Ecoc, deve ser entre 2 e 7.")
+        else:
+            self.codes = self.generateEcocTable(qclasses)
 
         if self.classesCanonicas:
             y_ind = y
