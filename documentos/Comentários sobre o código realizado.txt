@@ -1,0 +1,51 @@
+CLogDKPd_MGmB.py: Este código implementa um classificador logístico com kernel polinomial, utilizando o gradient descent em mini-batches para treinar o modelo. 
+A classe definida permite ajustar diversos parâmetros, como o grau do kernel, a taxa de aprendizagem, o número de iterações e o tamanho do batch. O treino pode ser feito de forma 
+iterativa, ponto a ponto, ou em batches maiores e é aplicado sobre uma matriz de Gram construída com base num kernel polinomial. No final do ficheiro, é feito um teste simples 
+com dados do problema XOR, onde o modelo é treinado e são gerados dois gráficos: um com a fronteira de decisão aprendida e outro com a evolução do erro ao longo das iterações.
+
+CLog_MC_Ecoc.py: Este ficheiro implementa um classificador de várias classes baseado no método ECOC (Error-Correcting Output Codes), combinando classificadores logísticos binários 
+no modo primal ou dual. A classe CLog_Ecoc gera uma tabela de códigos binários para representar cada classe e treina um modelo binário por coluna da tabela. Durante a previsão, 
+os modelos produzem um código binário para cada amostra, que é comparado com os códigos reais usando a distância de Hamming para determinar a classe mais próxima. 
+O script final testa o classificador num conjunto de dados sintético com três classes, avalia a accuracy, exibe a fronteira de decisão e apresenta a matriz de confusão para 
+analisar o desempenho do modelo.
+
+CLog_MC_OvO.py: Este programa define uma classe de classificação baseada na técnica One-vs-One (OvO), onde são treinados classificadores logísticos binários para cada par de 
+classes do conjunto de dados. A implementação permite usar dois tipos de classificadores binários: um em forma primal e outro em forma dual. 
+O método fit constrói todos os modelos binários necessários e treina-os com os dados correspondentes, utilizando gradient descent. Durante a previsão, cada modelo vota entre 
+as duas classes que compara, e a classe com mais votos no total é atribuída ao exemplo. No final do ficheiro, é feito um teste com dados sintéticos (neste caso, do tipo "moons"), 
+onde se treina o modelo, calcula-se a sua precisão, visualiza-se a fronteira de decisão e apresenta-se a matriz de confusão. 
+
+CLog_MGmB.py: Este código implementa um classificador logístico binário que utiliza gradient descent com mini-batches (ou amostragem iterativa) para ajustar os pesos do modelo. 
+O algoritmo permite personalizar parâmetros, à semelhança do CLogDKPd_MGmB.py. Durante o treino, os dados são normalizados com um termo de bias, e os pesos são atualizados com 
+base nos gradientes do erro entre a previsão e o valor real. O ficheiro inclui também um teste com dados do tipo XOR.
+
+bd_real_benchmarks_v1.ipynb: Este notebook, trata do pré-processamento da base de dados escolhida, percebendo que classes remover. Para tal, é feito cross-validation no OvO, de 
+forma a descobrir os resultados e matriz de confusão médios e, consequentemente quais as melhores classes para manter. Depois faz testes com essa base de dados filtrada para os 
+seguintes parametros fixos, n_iter=1000, step=0.001, iterative=False, sendo que os restantes variam de forma a percorrer todas as combinações possíveis. Tabelas de confusão, 
+resultados de precisão e gráficos de erro estão presentes para criar um melhor contexto.
+
+bd_real_benchmarks_v2.ipynb: À semelhança do notebook anterior, este usa as classes que o último programa descobriu e testa-as para o mesmo número de combinações, mudando apenas o
+n_iter para 500 e o step para 0.0001. Estas mudanças são para perceber como os modelos se comportam com um treino mais limitado.
+
+buscaTabelaEcoc.py: Este script procura gerar códigos ECOC binários ideais para classificadores multiclasse com base em critérios de distância de Hamming mínima. A ideia é 
+construir uma matriz binária em que cada linha representa o código de uma classe, garantindo que os códigos das classes sejam suficientemente distintos. Para isso, o algoritmo 
+percorre todas as combinações possíveis de códigos com um número fixo de bits e classes, gerando apenas as combinações em que os códigos são ordenados e válidos segundo uma 
+condição crescente. O script armazena e imprime todas as soluções que atingem a maior distância de Hamming mínima encontrada. Também fornece no final o número de classes, 
+o número de bits por código, a distância mínima obtida e o número total de soluções encontradas.
+
+gerar_pizzas.py: A função gera pontos 3D organizados em fatias circulares (como fatias de pizza) para várias classes. Cada classe tem pontos distribuídos em torno de um ângulo 
+central, com ruído na direção e raio variável entre limites. Os pontos são convertidos para coordenadas 3D com uma variação aleatória no eixo Z. Por fim, devolve as coordenadas dos 
+pontos e as classes correspondentes.
+
+modelos_vs_funcoes.ipynb: Teste explorativo de como os dados sintéticos são classficados apenas com o uso da biblioteca sklearn, tanto para o ECOC como para o OvO.
+
+teste_BDartificial_ECOC_OVO.ipynb: Tal o nome indica, este é o teste que compara o ECOC com o OvO para as base de dados sintéticas escolhidas para este trabalho. Os parâmetros 
+são identicos ao bd_real_benchmarks_v1, de forma a fazer as mesmas combinações de testes. Também contém tabelas de confusão, resultados de precisão e gráficos de erro, além disso
+gráficos sobre como ficaram divididas as classes de classificação.
+
+teste_ECOC_Assimetrico.ipynb: Ficheiro notebook que testa apenas o ECOC assimétrico, na base sintética em forma de pizzas. Aborda testes sobre como o modelo age perante escolhas
+de classes, treino com a tabela de ECOC exaustiva e diferentes escolhas de bits.
+
+teste_bd_artificial_.ipynb e teste_bd_artificial_2.ipynb: Mais uma adição de testes usando as bases de dados artificiais que foram escolhidas.
+
+teste_bd_real.ipynb: Exploração inicial do dataset digits e testes iniciais com ECOC e OvO para a base de dados real.
