@@ -40,8 +40,8 @@ pontos e as classes correspondentes.
 modelos_vs_funcoes.ipynb: Teste explorativo de como os dados sintéticos são classficados apenas com o uso da biblioteca sklearn, tanto para o ECOC como para o OvO.
 
 teste_BDartificial_ECOC_OVO.ipynb: Tal o nome indica, este é o teste que compara o ECOC com o OvO para as base de dados sintéticas escolhidas para este trabalho. Os parâmetros 
-são identicos ao bd_real_benchmarks_v1, de forma a fazer as mesmas combinações de testes. Também contém tabelas de confusão, resultados de precisão e gráficos de erro, além disso
-gráficos sobre como ficaram divididas as classes de classificação.
+são n_iter=1000, step=0.005, iterative=False. Também contém tabelas de confusão, resultados de precisão e gráficos de erro, além disso gráficos sobre como ficaram divididas as 
+classes de classificação.
 
 teste_ECOC_Assimetrico.ipynb: Ficheiro notebook que testa apenas o ECOC assimétrico, na base sintética em forma de pizzas. Aborda testes sobre como o modelo age perante escolhas
 de classes, treino com a tabela de ECOC exaustiva e diferentes escolhas de bits.
